@@ -4,9 +4,9 @@ def get_opts():
     parser = argparse.ArgumentParser()
 
     # dataset parameters
-    parser.add_argument('--root_dir', type=str, required=True,
+    parser.add_argument('--root_dir', type=str,default="/home/xiaoc57/documents/ngp_pl/data/nerf_synthetic/lego",
                         help='root directory of dataset')
-    parser.add_argument('--dataset_name', type=str, default='nsvf',
+    parser.add_argument('--dataset_name', type=str, default='nerf',
                         choices=['nerf', 'nsvf', 'colmap', 'nerfpp', 'rtmv'],
                         help='which dataset to train/test')
     parser.add_argument('--split', type=str, default='train',

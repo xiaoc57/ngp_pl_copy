@@ -31,11 +31,12 @@ from torchmetrics import (
 from torchmetrics.image.lpip import LearnedPerceptualImagePatchSimilarity
 
 # pytorch-lightning
-from pytorch_lightning.plugins import DDPPlugin
+# from pytorch_lightning.plugins import DDPPlugin
 from pytorch_lightning import LightningModule, Trainer
 from pytorch_lightning.callbacks import TQDMProgressBar, ModelCheckpoint
 from pytorch_lightning.loggers import TensorBoardLogger
-from pytorch_lightning.utilities.distributed import all_gather_ddp_if_available
+# from pytorch_lightning.utilities. import all_gather_ddp_if_available
+from pytorch_lightning.utilities.rank_zero  import rank_zero_only
 
 from utils import slim_ckpt, load_ckpt
 
@@ -222,19 +223,19 @@ class NeRFSystem(LightningModule):
 
         return logs
 
-    def validation_epoch_end(self, outputs):
-        psnrs = torch.stack([x['psnr'] for x in outputs])
-        mean_psnr = all_gather_ddp_if_available(psnrs).mean()
-        self.log('test/psnr', mean_psnr, True)
-
-        ssims = torch.stack([x['ssim'] for x in outputs])
-        mean_ssim = all_gather_ddp_if_available(ssims).mean()
-        self.log('test/ssim', mean_ssim)
-
-        if self.hparams.eval_lpips:
-            lpipss = torch.stack([x['lpips'] for x in outputs])
-            mean_lpips = all_gather_ddp_if_available(lpipss).mean()
-            self.log('test/lpips_vgg', mean_lpips)
+    # def on_validation_epoch_end(self, outputs):
+    #     psnrs = torch.stack([x['psnr'] for x in outputs])
+    #     mean_psnr = psnrs.mean()
+    #     self.log('test/psnr', mean_psnr, True)
+    #
+    #     ssims = torch.stack([x['ssim'] for x in outputs])
+    #     mean_ssim = ssims.mean()
+    #     self.log('test/ssim', mean_ssim)
+    #
+    #     if self.hparams.eval_lpips:
+    #         lpipss = torch.stack([x['lpips'] for x in outputs])
+    #         mean_lpips = lpipss.mean()
+    #         self.log('test/lpips_vgg', mean_lpips)
 
     def get_progress_bar_dict(self):
         # don't show the version number
@@ -268,8 +269,6 @@ if __name__ == '__main__':
                       enable_model_summary=False,
                       accelerator='gpu',
                       devices=hparams.num_gpus,
-                      strategy=DDPPlugin(find_unused_parameters=False)
-                               if hparams.num_gpus>1 else None,
                       num_sanity_val_steps=-1 if hparams.val_only else 0,
                       precision=16)
 
